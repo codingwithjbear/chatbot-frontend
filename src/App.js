@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import Login from './Login';
+import DocumentViewer from './DocumentViewer';
 
 class App extends Component {
   constructor(props) {
@@ -8,7 +9,8 @@ class App extends Component {
     this.state = {
       messages: [],
       userMessage: '',
-      isLoggedIn: false 
+      isLoggedIn: false,
+      onboardingDoc: null
     };
   }
 
@@ -38,15 +40,22 @@ class App extends Component {
     })
       .then((response) => response.json())
       .then((data) => {
-        messages.unshift({ role: 'bot', content: data.response });
-        this.setState({ messages });
+        if (data.onboarding_document) {
+          this.setState({ onboardingDoc: data.onboarding_document });
+        } else {
+          messages.unshift({ role: 'bot', content: data.response });
+          this.setState({ messages });
+        }
       });
   };
 
-  render() {
-    const { messages, userMessage, isLoggedIn } = this.state;
+  closeDocumentViewer = () => {
+    this.setState({ onboardingDoc: null });
+  };
 
-    // If not logged in, show the Login component
+  render() {
+    const { messages, userMessage, isLoggedIn, onboardingDoc } = this.state;
+
     if (!isLoggedIn) {
       return (
         <div className="CenteredContainer">
@@ -55,10 +64,9 @@ class App extends Component {
       );
     }
 
-    // If logged in, show the chat interface
     return (
       <div className="App">
-        <header className="App-header">Finsh Line</header>
+        <header className="App-header">Finish Line</header>
         <div className="Chat-container">
           <div className="Chat-history">
             {messages.map((message, index) => (
@@ -77,9 +85,16 @@ class App extends Component {
             <button onClick={this.handleSendMessage}>Send</button>
           </div>
         </div>
+        {onboardingDoc && 
+          <DocumentViewer 
+            content={onboardingDoc.content} 
+            onClose={this.closeDocumentViewer} 
+          />
+        }
       </div>
     );
   }
 }
+
 
 export default App;
